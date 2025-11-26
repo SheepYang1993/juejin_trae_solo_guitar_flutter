@@ -56,16 +56,29 @@ class GuitarFretboardPainter extends CustomPainter {
 
   // 绘制指板边框
   void _drawFretboardBorder(Canvas canvas, Size size, Paint paint) {
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    // 为左侧空弦音符预留的空间宽度
+    const double openStringSpace = 50.0;
+
+    // 指板边框从openStringSpace位置开始绘制
+    final rect = Rect.fromLTWH(
+      openStringSpace,
+      0,
+      size.width - openStringSpace,
+      size.height,
+    );
     canvas.drawRect(rect, paint);
   }
 
   // 绘制品丝
   void _drawFrets(Canvas canvas, Size size, Paint paint) {
+    // 为左侧空弦音符预留的空间宽度
+    const double openStringSpace = 50.0;
+
     for (int i = 1; i < fretboard.frets.length; i++) {
       final fret = fretboard.frets[i];
-      // 计算品丝在画布上的位置
-      final x = size.width * fret.position;
+      // 计算品丝在画布上的位置，从openStringSpace位置开始
+      final x =
+          openStringSpace + (size.width - openStringSpace) * fret.position;
       // 绘制品丝线条
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }
@@ -73,17 +86,29 @@ class GuitarFretboardPainter extends CustomPainter {
 
   // 绘制指板背景
   void _drawFretboardBackground(Canvas canvas, Size size) {
+    // 为左侧空弦音符预留的空间宽度
+    const double openStringSpace = 50.0;
+
     final paint = Paint()
       ..color =
           const Color(0xFF8B4513) // 棕色背景
       ..style = PaintingStyle.fill;
 
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    // 指板背景从openStringSpace位置开始绘制
+    final rect = Rect.fromLTWH(
+      openStringSpace,
+      0,
+      size.width - openStringSpace,
+      size.height,
+    );
     canvas.drawRect(rect, paint);
   }
 
   // 绘制品记圆点
   void _drawFretMarkers(Canvas canvas, Size size, Paint paint) {
+    // 为左侧空弦音符预留的空间宽度
+    const double openStringSpace = 50.0;
+
     // 需要绘制圆点的品位数
     final markerFrets = [3, 5, 7, 9, 12];
 
@@ -96,13 +121,17 @@ class GuitarFretboardPainter extends CustomPainter {
         if (fretNumber == 12) {
           // 12品是最后一个品，它的右侧是指板末端
           // 计算11品到指板末端的中间位置
-          x = size.width * (prevFret.position + (1.0 - prevFret.position) / 2);
+          x =
+              openStringSpace +
+              (size.width - openStringSpace) *
+                  (prevFret.position + (1.0 - prevFret.position) / 2);
         } else {
           // 其他品使用两个品丝之间的中间位置
           final fret = fretboard.frets[fretNumber];
           x =
-              size.width *
-              (prevFret.position + (fret.position - prevFret.position) / 2);
+              openStringSpace +
+              (size.width - openStringSpace) *
+                  (prevFret.position + (fret.position - prevFret.position) / 2);
         }
 
         // 12品绘制两个圆点
@@ -152,6 +181,9 @@ class GuitarFretboardPainter extends CustomPainter {
 
   // 绘制弦
   void _drawStrings(Canvas canvas, Size size, Paint paint) {
+    // 为左侧空弦音符预留的空间宽度
+    const double openStringSpace = 50.0;
+
     // 计算弦之间的间距
     final stringSpacing = size.height / (fretboard.stringCount - 1);
 
@@ -169,8 +201,8 @@ class GuitarFretboardPainter extends CustomPainter {
       // 实际弦径范围约为0.012-0.054英寸，转换为像素需要放大
       paint.strokeWidth = guitarString.gauge * 100;
 
-      // 绘制弦线条
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+      // 绘制弦线条：从openStringSpace位置开始，一直延伸到指板末端
+      canvas.drawLine(Offset(openStringSpace, y), Offset(size.width, y), paint);
     }
   }
 
@@ -178,6 +210,9 @@ class GuitarFretboardPainter extends CustomPainter {
   void _drawScaleNotes(Canvas canvas, Size size) {
     // 获取音阶在指板上的音符位置
     final scaleNotePositions = fretboard.getScaleNotePositions(scale!);
+
+    // 为左侧空弦音符预留的空间宽度
+    const double openStringSpace = 50.0;
 
     // 计算弦之间的间距
     final stringSpacing = size.height / (fretboard.stringCount - 1);
@@ -208,21 +243,28 @@ class GuitarFretboardPainter extends CustomPainter {
         final prevFret = fretboard.frets[position.fretNumber - 1];
         // 计算第11品到指板末端的距离
         final fretWidth = 1.0 - prevFret.position;
-        // 计算居中位置
-        x = size.width * (prevFret.position + fretWidth / 2);
+        // 计算居中位置，从openStringSpace位置开始
+        x =
+            openStringSpace +
+            (size.width - openStringSpace) *
+                (prevFret.position + fretWidth / 2);
       } else {
         // 其他品，位于两个品丝之间的中间位置
         final prevFret = fretboard.frets[position.fretNumber - 1];
         final currentFret = fretboard.frets[position.fretNumber];
         final fretWidth = currentFret.position - prevFret.position;
-        x = size.width * (prevFret.position + fretWidth / 2);
+        // 计算居中位置，从openStringSpace位置开始
+        x =
+            openStringSpace +
+            (size.width - openStringSpace) *
+                (prevFret.position + fretWidth / 2);
       }
 
       // 绘制音符标记
       _drawNoteMarker(canvas, x, y, position.note);
     }
 
-    // 绘制空弦音符（在指板最左侧）
+    // 绘制空弦音符（在左侧预留空间内）
     for (final position in openStringPositions) {
       // 计算音符在画布上的位置
       final double x;
@@ -232,8 +274,8 @@ class GuitarFretboardPainter extends CustomPainter {
       // 正确的弦顺序：6弦在最下面，1弦在最上面
       y = (position.stringNumber - 1) * stringSpacing;
 
-      // 空弦音符绘制在指板最左侧，距离指板左侧有一定间距
-      x = 20.0; // 位于指板左侧内部
+      // 空弦音符绘制在左侧预留空间内，距离左侧有一定间距
+      x = openStringSpace / 2; // 位于左侧预留空间的中间位置
 
       // 绘制空弦音符标记
       _drawOpenStringNoteMarker(canvas, x, y, position.note);
@@ -360,14 +402,22 @@ class GuitarFretboardWidget extends StatelessWidget {
     // 使用LayoutBuilder获取父组件的约束
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        // 计算合适的宽度：使用父组件宽度的100%，但不超过800像素
+        // 为左侧空弦音符预留的空间宽度
+        const double openStringSpace = 50.0;
+
+        // 计算指板主体宽度：使用父组件宽度的100%减去预留空间，但不超过800像素
         final double calculatedWidth = constraints.maxWidth;
-        final double width = calculatedWidth > 800 ? 800 : calculatedWidth;
+        final double fretboardWidth = calculatedWidth > 800 + openStringSpace
+            ? 800
+            : calculatedWidth - openStringSpace;
+
+        // 总宽度包含指板主体和左侧预留空间
+        final double totalWidth = fretboardWidth + openStringSpace;
 
         // 计算合适的高度：根据宽高比4:1计算，同时考虑弦数
         // 每个弦需要一定的高度，确保音符标记能够清晰显示
         final double ratio = 4.0; // 宽高比
-        final double heightBasedOnRatio = width / ratio;
+        final double heightBasedOnRatio = fretboardWidth / ratio;
         final double heightBasedOnStrings = stringCount * 25.0; // 每个弦25像素高度
         final double height = heightBasedOnRatio > heightBasedOnStrings
             ? heightBasedOnRatio
@@ -377,12 +427,12 @@ class GuitarFretboardWidget extends StatelessWidget {
         final fretboard = GuitarFretboard(
           stringCount: stringCount,
           fretCount: fretCount,
-          width: width,
+          width: fretboardWidth,
           height: height,
         );
 
         return SizedBox(
-          width: width,
+          width: totalWidth,
           height: height,
           child: CustomPaint(
             painter: GuitarFretboardPainter(fretboard, scale: scale),
