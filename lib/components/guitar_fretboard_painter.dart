@@ -6,8 +6,9 @@ import '../models/scales.dart';
 class GuitarFretboardPainter extends CustomPainter {
   final GuitarFretboard fretboard;
   final Scale? scale; // 可选的音阶参数
+  final String? highlightNote; // 可选的高亮音符参数
 
-  GuitarFretboardPainter(this.fretboard, {this.scale});
+  GuitarFretboardPainter(this.fretboard, {this.scale, this.highlightNote});
 
   // 音符颜色映射，用于区分不同音符
   static const Map<String, Color> noteColors = {
@@ -260,8 +261,10 @@ class GuitarFretboardPainter extends CustomPainter {
                 (prevFret.position + fretWidth / 2);
       }
 
-      // 绘制音符标记
-      _drawNoteMarker(canvas, x, y, position.note);
+      // 绘制音符标记，根据是否是高亮音符使用不同样式
+      final isHighlighted =
+          highlightNote != null && position.note.name == highlightNote;
+      _drawNoteMarker(canvas, x, y, position.note, isHighlighted);
     }
 
     // 绘制空弦音符（在左侧预留空间内）
@@ -277,28 +280,37 @@ class GuitarFretboardPainter extends CustomPainter {
       // 空弦音符绘制在左侧预留空间内，距离左侧有一定间距
       x = openStringSpace / 2; // 位于左侧预留空间的中间位置
 
-      // 绘制空弦音符标记
-      _drawOpenStringNoteMarker(canvas, x, y, position.note);
+      // 绘制空弦音符标记，根据是否是高亮音符使用不同样式
+      final isHighlighted =
+          highlightNote != null && position.note.name == highlightNote;
+      _drawOpenStringNoteMarker(canvas, x, y, position.note, isHighlighted);
     }
   }
 
   // 绘制空弦音符标记
-  void _drawOpenStringNoteMarker(Canvas canvas, double x, double y, Note note) {
+  void _drawOpenStringNoteMarker(
+    Canvas canvas,
+    double x,
+    double y,
+    Note note,
+    bool isHighlighted,
+  ) {
     // 获取音符对应的颜色
     final noteColor = noteColors[note.name] ?? Colors.white;
 
     // 绘制音符圆圈（比指板上的音符稍小）
     final circlePaint = Paint()
-      ..color = noteColor.withValues(alpha: 0.8)
+      ..color = noteColor.withOpacity(0.8)
       ..style = PaintingStyle.fill;
 
-    const circleRadius = 10.0;
+    // 高亮音符使用更大的圆圈
+    final circleRadius = isHighlighted ? 14.0 : 10.0;
     canvas.drawCircle(Offset(x, y), circleRadius, circlePaint);
 
     // 绘制圆圈边框
     final borderPaint = Paint()
       ..color = Colors.black
-      ..strokeWidth = 1.5
+      ..strokeWidth = isHighlighted ? 3.0 : 1.5
       ..style = PaintingStyle.stroke;
 
     canvas.drawCircle(Offset(x, y), circleRadius, borderPaint);
@@ -306,7 +318,7 @@ class GuitarFretboardPainter extends CustomPainter {
     // 绘制音符名称
     final textStyle = TextStyle(
       color: Colors.black,
-      fontSize: 10.0,
+      fontSize: isHighlighted ? 14.0 : 10.0,
       fontWeight: FontWeight.bold,
     );
 
@@ -329,7 +341,13 @@ class GuitarFretboardPainter extends CustomPainter {
   }
 
   // 绘制单个音符标记
-  void _drawNoteMarker(Canvas canvas, double x, double y, Note note) {
+  void _drawNoteMarker(
+    Canvas canvas,
+    double x,
+    double y,
+    Note note,
+    bool isHighlighted,
+  ) {
     // 获取音符对应的颜色
     final noteColor = noteColors[note.name] ?? Colors.white;
 
@@ -338,13 +356,14 @@ class GuitarFretboardPainter extends CustomPainter {
       ..color = noteColor.withOpacity(0.8)
       ..style = PaintingStyle.fill;
 
-    const circleRadius = 12.0;
+    // 高亮音符使用更大的圆圈
+    final circleRadius = isHighlighted ? 18.0 : 12.0;
     canvas.drawCircle(Offset(x, y), circleRadius, circlePaint);
 
     // 绘制圆圈边框
     final borderPaint = Paint()
       ..color = Colors.black
-      ..strokeWidth = 1.5
+      ..strokeWidth = isHighlighted ? 3.0 : 1.5
       ..style = PaintingStyle.stroke;
 
     canvas.drawCircle(Offset(x, y), circleRadius, borderPaint);
@@ -352,7 +371,7 @@ class GuitarFretboardPainter extends CustomPainter {
     // 绘制音符名称
     final textStyle = TextStyle(
       color: Colors.black,
-      fontSize: 12.0,
+      fontSize: isHighlighted ? 16.0 : 12.0,
       fontWeight: FontWeight.bold,
     );
 
@@ -377,7 +396,9 @@ class GuitarFretboardPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     if (oldDelegate is GuitarFretboardPainter) {
-      return oldDelegate.fretboard != fretboard || oldDelegate.scale != scale;
+      return oldDelegate.fretboard != fretboard ||
+          oldDelegate.scale != scale ||
+          oldDelegate.highlightNote != highlightNote;
     }
     return true;
   }
@@ -386,6 +407,7 @@ class GuitarFretboardPainter extends CustomPainter {
 /// 吉他指板组件
 class GuitarFretboardWidget extends StatelessWidget {
   final Scale? scale; // 可选的音阶参数
+  final String? highlightNote; // 可选的高亮音符参数
   final int stringCount; // 弦数
   final int fretCount; // 品数
 
@@ -393,6 +415,7 @@ class GuitarFretboardWidget extends StatelessWidget {
   const GuitarFretboardWidget({
     super.key,
     this.scale,
+    this.highlightNote,
     this.stringCount = 6,
     this.fretCount = 12,
   });
@@ -435,7 +458,11 @@ class GuitarFretboardWidget extends StatelessWidget {
           width: totalWidth,
           height: height,
           child: CustomPaint(
-            painter: GuitarFretboardPainter(fretboard, scale: scale),
+            painter: GuitarFretboardPainter(
+              fretboard,
+              scale: scale,
+              highlightNote: highlightNote,
+            ),
           ),
         );
       },
