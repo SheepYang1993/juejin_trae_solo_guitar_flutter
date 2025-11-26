@@ -10,6 +10,12 @@ enum PracticeState {
   showingAnswer, // 显示答案
 }
 
+// 练习顺序枚举
+enum PracticeOrder {
+  scaleOrder, // 音阶顺序
+  randomOrder, // 随机顺序
+}
+
 class PracticeModePage extends StatefulWidget {
   final Scale scale;
   final String keyName;
@@ -53,6 +59,8 @@ class _PracticeModePageState extends State<PracticeModePage> {
     12,
     (index) => (index + 1) * 5,
   );
+  // 用户选择的练习顺序
+  PracticeOrder _selectedPracticeOrder = PracticeOrder.randomOrder;
 
   // 定时器
   Timer? _timer;
@@ -71,7 +79,11 @@ class _PracticeModePageState extends State<PracticeModePage> {
     setState(() {
       _practiceRounds++;
       _practicedNotes.clear();
-      _currentPracticeNotes = List.from(widget.scale.notes)..shuffle();
+      // 根据选择的练习顺序生成练习音符列表
+      _currentPracticeNotes = List.from(widget.scale.notes);
+      if (_selectedPracticeOrder == PracticeOrder.randomOrder) {
+        _currentPracticeNotes.shuffle();
+      }
       // 重置倒计时为用户选择的找音符阶段时长
       _countdown = _selectedFindNoteDuration;
       _showNextNote();
@@ -265,6 +277,34 @@ class _PracticeModePageState extends State<PracticeModePage> {
                                       PracticeState.showingAnswer) {
                                     _countdown = value;
                                   }
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 15),
+                        // 练习顺序选择
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('练习顺序:', style: TextStyle(fontSize: 18)),
+                            DropdownButton<PracticeOrder>(
+                              value: _selectedPracticeOrder,
+                              items: PracticeOrder.values.map((order) {
+                                return DropdownMenuItem<PracticeOrder>(
+                                  value: order,
+                                  child: Text(
+                                    order == PracticeOrder.scaleOrder
+                                        ? '音阶顺序'
+                                        : '随机顺序',
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedPracticeOrder = value!;
+                                  // 重新开始练习，应用新的练习顺序
+                                  _startNewRound();
                                 });
                               },
                             ),
