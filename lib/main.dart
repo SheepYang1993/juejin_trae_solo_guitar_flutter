@@ -168,7 +168,7 @@ class _GuitarFretboardPageState extends State<GuitarFretboardPage> {
               ),
               const SizedBox(height: 30),
 
-              // 调式选择卡片
+              // 调式选择和音阶信息合并卡片
               Card(
                 elevation: 5,
                 shape: RoundedRectangleBorder(
@@ -179,6 +179,7 @@ class _GuitarFretboardPageState extends State<GuitarFretboardPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // 选择调式部分
                       const Text(
                         '选择调式',
                         style: TextStyle(
@@ -188,112 +189,102 @@ class _GuitarFretboardPageState extends State<GuitarFretboardPage> {
                       ),
                       const SizedBox(height: 20),
 
-                      // 调式选择网格布局
-                      GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 20,
-                        crossAxisSpacing: 20,
-                        childAspectRatio: 3,
+                      // 调式选择行布局
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           // 调选择
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                '调',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              DropdownButtonFormField<String>(
-                                value: _selectedKey,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 15,
-                                    vertical: 12,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  '调',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                onChanged: (String? newValue) {
-                                  setState(() {
-                                    _selectedKey = newValue!;
-                                    _updateScale();
-                                  });
-                                },
-                                items: _keys.map((String key) {
-                                  return DropdownMenuItem<String>(
-                                    value: key,
-                                    child: Text(key),
-                                  );
-                                }).toList(),
-                              ),
-                            ],
+                                const SizedBox(height: 8),
+                                DropdownButtonFormField<String>(
+                                  value: _selectedKey,
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 15,
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                  onChanged: (String? newValue) {
+                                    setState(() {
+                                      _selectedKey = newValue!;
+                                      _updateScale();
+                                    });
+                                  },
+                                  items: _keys.map((String key) {
+                                    return DropdownMenuItem<String>(
+                                      value: key,
+                                      child: Text(key),
+                                    );
+                                  }).toList(),
+                                  isExpanded: true,
+                                ),
+                              ],
+                            ),
                           ),
-
+                          const SizedBox(width: 20),
                           // 音阶类型选择
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                '音阶类型',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              DropdownButtonFormField<String>(
-                                value: _selectedScaleType,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 15,
-                                    vertical: 12,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  '音阶类型',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                onChanged: (String? newValue) {
-                                  setState(() {
-                                    _selectedScaleType = newValue!;
-                                    _updateScale();
-                                  });
-                                },
-                                items: _scaleTypes.map((String type) {
-                                  return DropdownMenuItem<String>(
-                                    value: type,
-                                    child: Text(type),
-                                  );
-                                }).toList(),
-                                isExpanded: true,
-                              ),
-                            ],
+                                const SizedBox(height: 8),
+                                DropdownButtonFormField<String>(
+                                  value: _selectedScaleType,
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 15,
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                  onChanged: (String? newValue) {
+                                    setState(() {
+                                      _selectedScaleType = newValue!;
+                                      _updateScale();
+                                    });
+                                  },
+                                  items: _scaleTypes.map((String type) {
+                                    return DropdownMenuItem<String>(
+                                      value: type,
+                                      child: Text(type),
+                                    );
+                                  }).toList(),
+                                  isExpanded: true,
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
 
-              // 当前音阶信息卡片
-              Card(
-                elevation: 5,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                      // 分隔线
+                      const SizedBox(height: 30),
+                      const Divider(thickness: 1),
+                      const SizedBox(height: 30),
+
+                      // 当前音阶信息部分
                       const Text(
                         '当前音阶信息',
                         style: TextStyle(
