@@ -1,11 +1,29 @@
 import 'package:flutter/material.dart';
 import '../models/guitar_fretboard.dart';
+import '../models/scales.dart';
 
 /// 吉他指板绘制组件
 class GuitarFretboardPainter extends CustomPainter {
   final GuitarFretboard fretboard;
+  final Scale? scale; // 可选的音阶参数
 
-  GuitarFretboardPainter(this.fretboard);
+  GuitarFretboardPainter(this.fretboard, {this.scale});
+
+  // 音符颜色映射，用于区分不同音符
+  static const Map<String, Color> noteColors = {
+    'C': Colors.red,
+    'C#': Colors.orange,
+    'D': Colors.yellow,
+    'Eb': Colors.lime,
+    'E': Colors.green,
+    'F': Colors.teal,
+    'F#': Colors.cyan,
+    'G': Colors.blue,
+    'Ab': Colors.indigo,
+    'A': Colors.purple,
+    'Bb': Colors.pink,
+    'B': Colors.redAccent,
+  };
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -29,6 +47,11 @@ class GuitarFretboardPainter extends CustomPainter {
 
     // 绘制弦
     _drawStrings(canvas, size, paint);
+
+    // 绘制音阶音符（如果提供了音阶）
+    if (scale != null) {
+      _drawScaleNotes(canvas, size);
+    }
   }
 
   // 绘制指板边框
@@ -151,9 +174,164 @@ class GuitarFretboardPainter extends CustomPainter {
     }
   }
 
+  // 绘制音阶音符
+  void _drawScaleNotes(Canvas canvas, Size size) {
+    // 获取音阶在指板上的音符位置
+    final scaleNotePositions = fretboard.getScaleNotePositions(scale!);
+
+    // 计算弦之间的间距
+    final stringSpacing = size.height / (fretboard.stringCount - 1);
+
+    // 分离空弦音符和非空弦音符
+    final openStringPositions = scaleNotePositions
+        .where((p) => p.fretNumber == 0)
+        .toList();
+    final frettedPositions = scaleNotePositions
+        .where((p) => p.fretNumber > 0)
+        .toList();
+
+    // 绘制非空弦音符（在指板上）
+    for (final position in frettedPositions) {
+      // 计算音符在画布上的位置
+      final double x;
+      final double y;
+
+      // 计算y坐标（弦的位置）
+      // 注意：position.stringNumber=1对应最上面的弦，position.stringNumber=6对应最下面的弦
+      y = (fretboard.stringCount - position.stringNumber) * stringSpacing;
+
+      // 计算x坐标（品的位置）
+      if (position.fretNumber == fretboard.fretCount) {
+        // 最后一品，位于指板最右侧
+        final prevFret = fretboard.frets[position.fretNumber - 1];
+        x = size.width - 20.0; // 稍微向左偏移
+      } else {
+        // 其他品，位于两个品丝之间的中间位置
+        final prevFret = fretboard.frets[position.fretNumber - 1];
+        final currentFret = fretboard.frets[position.fretNumber];
+        final fretWidth = currentFret.position - prevFret.position;
+        x = size.width * (prevFret.position + fretWidth / 2);
+      }
+
+      // 绘制音符标记
+      _drawNoteMarker(canvas, x, y, position.note);
+    }
+
+    // 绘制空弦音符（在指板最左侧）
+    for (final position in openStringPositions) {
+      // 计算音符在画布上的位置
+      final double x;
+      final double y;
+
+      // 计算y坐标（弦的位置）
+      y = (fretboard.stringCount - position.stringNumber) * stringSpacing;
+
+      // 空弦音符绘制在指板最左侧，距离指板左侧有一定间距
+      x = -30.0; // 位于指板左侧外部
+
+      // 绘制空弦音符标记
+      _drawOpenStringNoteMarker(canvas, x, y, position.note);
+    }
+  }
+
+  // 绘制空弦音符标记
+  void _drawOpenStringNoteMarker(Canvas canvas, double x, double y, Note note) {
+    // 获取音符对应的颜色
+    final noteColor = noteColors[note.name] ?? Colors.white;
+
+    // 绘制音符圆圈（比指板上的音符稍小）
+    final circlePaint = Paint()
+      ..color = noteColor.withOpacity(0.8)
+      ..style = PaintingStyle.fill;
+
+    const circleRadius = 10.0;
+    canvas.drawCircle(Offset(x, y), circleRadius, circlePaint);
+
+    // 绘制圆圈边框
+    final borderPaint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawCircle(Offset(x, y), circleRadius, borderPaint);
+
+    // 绘制音符名称
+    final textStyle = TextStyle(
+      color: Colors.black,
+      fontSize: 10.0,
+      fontWeight: FontWeight.bold,
+    );
+
+    final textSpan = TextSpan(text: note.name, style: textStyle);
+
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
+
+    textPainter.layout(minWidth: 0, maxWidth: circleRadius * 2);
+
+    final textOffset = Offset(
+      x - textPainter.width / 2,
+      y - textPainter.height / 2,
+    );
+
+    textPainter.paint(canvas, textOffset);
+  }
+
+  // 绘制单个音符标记
+  void _drawNoteMarker(Canvas canvas, double x, double y, Note note) {
+    // 获取音符对应的颜色
+    final noteColor = noteColors[note.name] ?? Colors.white;
+
+    // 绘制音符圆圈
+    final circlePaint = Paint()
+      ..color = noteColor.withOpacity(0.8)
+      ..style = PaintingStyle.fill;
+
+    const circleRadius = 12.0;
+    canvas.drawCircle(Offset(x, y), circleRadius, circlePaint);
+
+    // 绘制圆圈边框
+    final borderPaint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawCircle(Offset(x, y), circleRadius, borderPaint);
+
+    // 绘制音符名称
+    final textStyle = TextStyle(
+      color: Colors.black,
+      fontSize: 12.0,
+      fontWeight: FontWeight.bold,
+    );
+
+    final textSpan = TextSpan(text: note.name, style: textStyle);
+
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
+
+    textPainter.layout(minWidth: 0, maxWidth: circleRadius * 2);
+
+    final textOffset = Offset(
+      x - textPainter.width / 2,
+      y - textPainter.height / 2,
+    );
+
+    textPainter.paint(canvas, textOffset);
+  }
+
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return oldDelegate != this;
+    if (oldDelegate is GuitarFretboardPainter) {
+      return oldDelegate.fretboard != fretboard || oldDelegate.scale != scale;
+    }
+    return true;
   }
 }
 
@@ -161,9 +339,15 @@ class GuitarFretboardPainter extends CustomPainter {
 class GuitarFretboardWidget extends StatelessWidget {
   final double width;
   final double height;
+  final Scale? scale; // 可选的音阶参数
 
   // 优化长宽比例，默认4:1的比例（符合实际吉他指板比例）
-  const GuitarFretboardWidget({super.key, this.width = 400, this.height = 100});
+  const GuitarFretboardWidget({
+    super.key,
+    this.width = 400,
+    this.height = 100,
+    this.scale,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -178,7 +362,9 @@ class GuitarFretboardWidget extends StatelessWidget {
     return SizedBox(
       width: width,
       height: height,
-      child: CustomPaint(painter: GuitarFretboardPainter(fretboard)),
+      child: CustomPaint(
+        painter: GuitarFretboardPainter(fretboard, scale: scale),
+      ),
     );
   }
 }
