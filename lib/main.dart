@@ -15,6 +15,13 @@ class MyApp extends StatelessWidget {
       title: '吉他指板模拟器',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.brown),
+        useMaterial3: true,
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            textStyle: const TextStyle(fontSize: 16),
+          ),
+        ),
       ),
       home: const GuitarFretboardPage(),
     );
@@ -130,99 +137,277 @@ class _GuitarFretboardPageState extends State<GuitarFretboardPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('吉他指板模拟器'),
+        centerTitle: true,
       ),
-      body: Center(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.brown.shade50, Colors.brown.shade100],
+          ),
+        ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
+              // 应用标题
               const Text(
-                '6弦12品吉他指板',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-
-              // 调式选择区域
-              const Text(
-                '选择调式',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                '吉他指板模拟器',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.brown,
+                ),
               ),
               const SizedBox(height: 10),
+              const Text(
+                '6弦12品吉他指板',
+                style: TextStyle(fontSize: 18, color: Colors.brown),
+              ),
+              const SizedBox(height: 30),
 
-              // 调选择下拉菜单
+              // 调式选择卡片
+              Card(
+                elevation: 5,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '选择调式',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // 调式选择网格布局
+                      GridView.count(
+                        crossAxisCount: 2,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 20,
+                        crossAxisSpacing: 20,
+                        childAspectRatio: 3,
+                        children: [
+                          // 调选择
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '调',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              DropdownButtonFormField<String>(
+                                value: _selectedKey,
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 15,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    _selectedKey = newValue!;
+                                    _updateScale();
+                                  });
+                                },
+                                items: _keys.map((String key) {
+                                  return DropdownMenuItem<String>(
+                                    value: key,
+                                    child: Text(key),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+
+                          // 音阶类型选择
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '音阶类型',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              DropdownButtonFormField<String>(
+                                value: _selectedScaleType,
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 15,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    _selectedScaleType = newValue!;
+                                    _updateScale();
+                                  });
+                                },
+                                items: _scaleTypes.map((String type) {
+                                  return DropdownMenuItem<String>(
+                                    value: type,
+                                    child: Text(type),
+                                  );
+                                }).toList(),
+                                isExpanded: true,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              // 当前音阶信息卡片
+              Card(
+                elevation: 5,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '当前音阶信息',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('音阶名称:'),
+                          Text(
+                            _currentScale.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('音阶类型:'),
+                          Text(
+                            _selectedScaleType,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('调:'),
+                          Text(
+                            _selectedKey,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+                      const Text(
+                        '包含音符:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        _currentScale.notes.join(', '),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              // 指板显示卡片
+              Card(
+                elevation: 8,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      const Text(
+                        '指板显示',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // 使用吉他指板组件，显示选中的音阶
+                      SizedBox(
+                        width: double.infinity,
+                        child: Center(
+                          child: GuitarFretboardWidget(
+                            width: 600,
+                            height: 150,
+                            scale: _currentScale,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              // 操作按钮
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('调: '),
-                  const SizedBox(width: 10),
-                  DropdownButton<String>(
-                    value: _selectedKey,
-                    onChanged: (String? newValue) {
+                  ElevatedButton(
+                    onPressed: () {
                       setState(() {
-                        _selectedKey = newValue!;
+                        _selectedKey = 'C';
+                        _selectedScaleType = '大调';
                         _updateScale();
                       });
                     },
-                    items: _keys.map((String key) {
-                      return DropdownMenuItem<String>(
-                        value: key,
-                        child: Text(key),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(width: 30),
-
-                  // 音阶类型选择下拉菜单
-                  const Text('音阶类型: '),
-                  const SizedBox(width: 10),
-                  DropdownButton<String>(
-                    value: _selectedScaleType,
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedScaleType = newValue!;
-                        _updateScale();
-                      });
-                    },
-                    items: _scaleTypes.map((String type) {
-                      return DropdownMenuItem<String>(
-                        value: type,
-                        child: Text(type),
-                      );
-                    }).toList(),
+                    child: const Text('重置为默认设置'),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
 
-              // 显示当前选中的音阶信息
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  '当前显示: ${_currentScale.name}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-
-              // 使用吉他指板组件，显示选中的音阶
-              GuitarFretboardWidget(
-                width: 500,
-                height: 125,
-                scale: _currentScale,
-              ),
-              const SizedBox(height: 20),
-
-              // 显示音阶包含的音符
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  '音符: ${_currentScale.notes.join(', ')}',
-                  style: const TextStyle(fontSize: 16),
-                  textAlign: TextAlign.center,
-                ),
+              // 页脚
+              const Text(
+                '© 2024 吉他指板模拟器',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
               ),
             ],
           ),
