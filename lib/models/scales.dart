@@ -2,19 +2,35 @@
 
 /// 音符类
 class Note {
-  final String name; // 音名，如 "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"
+  final String
+  name; // 音名，如 "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"
   final int pitch; // 音高，以半音为单位，C4为60
   final int octave; // 八度
 
   // 音符缓存，避免重复创建相同音高的音符
   static final Map<int, Note> _noteCache = {};
-  
+
   // 音名列表，用于快速查找
   static const List<String> noteNames = [
-    'C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B',
+    'C',
+    'C#',
+    'D',
+    'Eb',
+    'E',
+    'F',
+    'F#',
+    'G',
+    'Ab',
+    'A',
+    'Bb',
+    'B',
   ];
 
-  Note._internal({required this.name, required this.pitch, required this.octave});
+  Note._internal({
+    required this.name,
+    required this.pitch,
+    required this.octave,
+  });
 
   // 从音高创建音符（带缓存）
   factory Note.fromPitch(int pitch) {
@@ -22,11 +38,11 @@ class Note {
     if (_noteCache.containsKey(pitch)) {
       return _noteCache[pitch]!;
     }
-    
+
     // 计算八度和音名
     final octave = (pitch / 12).floor() - 1;
     final noteName = noteNames[pitch % 12];
-    
+
     // 创建新音符并缓存
     final note = Note._internal(name: noteName, pitch: pitch, octave: octave);
     _noteCache[pitch] = note;
@@ -64,6 +80,15 @@ enum ScaleType {
   major, // 大调音阶
   pentatonicMajor, // 大调五声音阶
   pentatonicMinor, // 小调五声音阶
+  naturalMinor, // 自然小调
+  harmonicMinor, // 和声小调
+  melodicMinor, // 旋律小调
+  blues, // 蓝调音阶
+  dorian, // 多利亚调式
+  phrygian, // 弗里几亚调式
+  lydian, // 利底亚调式
+  mixolydian, // 混合利底亚调式
+  locrian, // 洛克里亚调式
 }
 
 /// 音阶类
@@ -93,15 +118,15 @@ class Scale {
   }) {
     // 生成缓存键
     final cacheKey = '$type-${rootNote.pitch}';
-    
+
     // 检查缓存中是否已有该音阶
     if (_scaleCache.containsKey(cacheKey)) {
       return _scaleCache[cacheKey]!;
     }
-    
+
     // 生成音阶音符
     final notes = _generateNotes(rootNote, intervals);
-    
+
     // 创建新音阶并缓存
     final scale = Scale._internal(
       name: name,
@@ -132,13 +157,18 @@ class Scale {
   }
 
   // 生成指定音域内的音阶音符
-  static List<Note> _generateNotesInRange(Note rootNote, List<int> intervals, int minPitch, int maxPitch) {
+  static List<Note> _generateNotesInRange(
+    Note rootNote,
+    List<int> intervals,
+    int minPitch,
+    int maxPitch,
+  ) {
     final notes = <Note>[];
-    
+
     // 生成一个八度的基础音阶
     final baseScale = _generateNotes(rootNote, intervals);
     final baseIntervals = intervals.sublist(1); // 去除第一个0
-    
+
     // 向下扩展到最低音
     var currentPitch = rootNote.pitch;
     while (currentPitch >= minPitch) {
@@ -155,10 +185,10 @@ class Scale {
         }
       }
     }
-    
+
     // 添加原始音阶
     notes.addAll(baseScale);
-    
+
     // 向上扩展到最高音
     currentPitch = rootNote.pitch + 12;
     while (currentPitch <= maxPitch) {
@@ -173,7 +203,7 @@ class Scale {
       }
       currentPitch += 12;
     }
-    
+
     return notes;
   }
 
@@ -216,12 +246,135 @@ class Scale {
     );
   }
 
+  // 获取自然小调音阶
+  factory Scale.naturalMinor(Note rootNote) {
+    // 自然小调音程关系：全半全全半全全（W-H-W-W-H-W-W）
+    // 对应的半音数：0, 2, 3, 5, 7, 8, 10
+    final intervals = [0, 2, 1, 2, 2, 1, 2, 2];
+    return Scale(
+      name: '${rootNote.name} Natural Minor',
+      type: ScaleType.naturalMinor,
+      rootNote: rootNote,
+      intervals: intervals,
+    );
+  }
+
+  // 获取和声小调音阶
+  factory Scale.harmonicMinor(Note rootNote) {
+    // 和声小调音程关系：全半全全半小三半（W-H-W-W-H-m3-H）
+    // 对应的半音数：0, 2, 3, 5, 7, 8, 11
+    final intervals = [0, 2, 1, 2, 2, 1, 3, 1];
+    return Scale(
+      name: '${rootNote.name} Harmonic Minor',
+      type: ScaleType.harmonicMinor,
+      rootNote: rootNote,
+      intervals: intervals,
+    );
+  }
+
+  // 获取旋律小调音阶
+  factory Scale.melodicMinor(Note rootNote) {
+    // 旋律小调音程关系：全半全全全全半（W-H-W-W-W-W-H）
+    // 对应的半音数：0, 2, 3, 5, 7, 9, 11
+    final intervals = [0, 2, 1, 2, 2, 2, 2, 1];
+    return Scale(
+      name: '${rootNote.name} Melodic Minor',
+      type: ScaleType.melodicMinor,
+      rootNote: rootNote,
+      intervals: intervals,
+    );
+  }
+
+  // 获取蓝调音阶
+  factory Scale.blues(Note rootNote) {
+    // 蓝调音阶音程关系：小三全半小三全（m3-W-H-m3-W）
+    // 对应的半音数：0, 3, 5, 6, 7, 10
+    final intervals = [0, 3, 2, 1, 1, 3, 2];
+    return Scale(
+      name: '${rootNote.name} Blues',
+      type: ScaleType.blues,
+      rootNote: rootNote,
+      intervals: intervals,
+    );
+  }
+
+  // 获取多利亚调式
+  factory Scale.dorian(Note rootNote) {
+    // 多利亚调式音程关系：全半全全全半全（W-H-W-W-W-H-W）
+    // 对应的半音数：0, 2, 3, 5, 7, 9, 10
+    final intervals = [0, 2, 1, 2, 2, 2, 1, 2];
+    return Scale(
+      name: '${rootNote.name} Dorian',
+      type: ScaleType.dorian,
+      rootNote: rootNote,
+      intervals: intervals,
+    );
+  }
+
+  // 获取弗里几亚调式
+  factory Scale.phrygian(Note rootNote) {
+    // 弗里几亚调式音程关系：半全全全半全全（H-W-W-W-H-W-W）
+    // 对应的半音数：0, 1, 3, 5, 7, 8, 10
+    final intervals = [0, 1, 2, 2, 2, 1, 2, 2];
+    return Scale(
+      name: '${rootNote.name} Phrygian',
+      type: ScaleType.phrygian,
+      rootNote: rootNote,
+      intervals: intervals,
+    );
+  }
+
+  // 获取利底亚调式
+  factory Scale.lydian(Note rootNote) {
+    // 利底亚调式音程关系：全全全半全全半（W-W-W-H-W-W-H）
+    // 对应的半音数：0, 2, 4, 6, 7, 9, 11
+    final intervals = [0, 2, 2, 2, 1, 2, 2, 1];
+    return Scale(
+      name: '${rootNote.name} Lydian',
+      type: ScaleType.lydian,
+      rootNote: rootNote,
+      intervals: intervals,
+    );
+  }
+
+  // 获取混合利底亚调式
+  factory Scale.mixolydian(Note rootNote) {
+    // 混合利底亚调式音程关系：全全半全全半全（W-W-H-W-W-H-W）
+    // 对应的半音数：0, 2, 4, 5, 7, 9, 10
+    final intervals = [0, 2, 2, 1, 2, 2, 1, 2];
+    return Scale(
+      name: '${rootNote.name} Mixolydian',
+      type: ScaleType.mixolydian,
+      rootNote: rootNote,
+      intervals: intervals,
+    );
+  }
+
+  // 获取洛克里亚调式
+  factory Scale.locrian(Note rootNote) {
+    // 洛克里亚调式音程关系：半全全半全全全（H-W-W-H-W-W-W）
+    // 对应的半音数：0, 1, 3, 5, 6, 8, 10
+    final intervals = [0, 1, 2, 2, 1, 2, 2, 2];
+    return Scale(
+      name: '${rootNote.name} Locrian',
+      type: ScaleType.locrian,
+      rootNote: rootNote,
+      intervals: intervals,
+    );
+  }
+
   // 获取指定音域内的大调音阶
   factory Scale.majorInRange(Note rootNote, int minPitch, int maxPitch) {
     final intervals = [0, 2, 2, 1, 2, 2, 2, 1];
-    final notes = _generateNotesInRange(rootNote, intervals, minPitch, maxPitch);
+    final notes = _generateNotesInRange(
+      rootNote,
+      intervals,
+      minPitch,
+      maxPitch,
+    );
     return Scale._internal(
-      name: '${rootNote.name} Major (Range: ${Note.fromPitch(minPitch)} - ${Note.fromPitch(maxPitch)})',
+      name:
+          '${rootNote.name} Major (Range: ${Note.fromPitch(minPitch)} - ${Note.fromPitch(maxPitch)})',
       type: ScaleType.major,
       rootNote: rootNote,
       intervals: intervals,
@@ -230,11 +383,21 @@ class Scale {
   }
 
   // 获取指定音域内的大调五声音阶
-  factory Scale.pentatonicMajorInRange(Note rootNote, int minPitch, int maxPitch) {
+  factory Scale.pentatonicMajorInRange(
+    Note rootNote,
+    int minPitch,
+    int maxPitch,
+  ) {
     final intervals = [0, 2, 2, 3, 2, 3];
-    final notes = _generateNotesInRange(rootNote, intervals, minPitch, maxPitch);
+    final notes = _generateNotesInRange(
+      rootNote,
+      intervals,
+      minPitch,
+      maxPitch,
+    );
     return Scale._internal(
-      name: '${rootNote.name} Pentatonic Major (Range: ${Note.fromPitch(minPitch)} - ${Note.fromPitch(maxPitch)})',
+      name:
+          '${rootNote.name} Pentatonic Major (Range: ${Note.fromPitch(minPitch)} - ${Note.fromPitch(maxPitch)})',
       type: ScaleType.pentatonicMajor,
       rootNote: rootNote,
       intervals: intervals,
@@ -243,11 +406,21 @@ class Scale {
   }
 
   // 获取指定音域内的小调五声音阶
-  factory Scale.pentatonicMinorInRange(Note rootNote, int minPitch, int maxPitch) {
+  factory Scale.pentatonicMinorInRange(
+    Note rootNote,
+    int minPitch,
+    int maxPitch,
+  ) {
     final intervals = [0, 3, 2, 2, 3, 2];
-    final notes = _generateNotesInRange(rootNote, intervals, minPitch, maxPitch);
+    final notes = _generateNotesInRange(
+      rootNote,
+      intervals,
+      minPitch,
+      maxPitch,
+    );
     return Scale._internal(
-      name: '${rootNote.name} Pentatonic Minor (Range: ${Note.fromPitch(minPitch)} - ${Note.fromPitch(maxPitch)})',
+      name:
+          '${rootNote.name} Pentatonic Minor (Range: ${Note.fromPitch(minPitch)} - ${Note.fromPitch(maxPitch)})',
       type: ScaleType.pentatonicMinor,
       rootNote: rootNote,
       intervals: intervals,
@@ -259,7 +432,7 @@ class Scale {
   factory Scale.withOctaves(Note rootNote, ScaleType type, int octaveCount) {
     List<int> intervals;
     String typeName;
-    
+
     switch (type) {
       case ScaleType.major:
         intervals = [0, 2, 2, 1, 2, 2, 2, 1];
@@ -273,14 +446,60 @@ class Scale {
         intervals = [0, 3, 2, 2, 3, 2];
         typeName = 'Pentatonic Minor';
         break;
+      case ScaleType.naturalMinor:
+        intervals = [0, 2, 1, 2, 2, 1, 2, 2];
+        typeName = 'Natural Minor';
+        break;
+      case ScaleType.harmonicMinor:
+        intervals = [0, 2, 1, 2, 2, 1, 3, 1];
+        typeName = 'Harmonic Minor';
+        break;
+      case ScaleType.melodicMinor:
+        intervals = [0, 2, 1, 2, 2, 2, 2, 1];
+        typeName = 'Melodic Minor';
+        break;
+      case ScaleType.blues:
+        intervals = [0, 3, 2, 1, 1, 3, 2];
+        typeName = 'Blues';
+        break;
+      case ScaleType.dorian:
+        intervals = [0, 2, 1, 2, 2, 2, 1, 2];
+        typeName = 'Dorian';
+        break;
+      case ScaleType.phrygian:
+        intervals = [0, 1, 2, 2, 2, 1, 2, 2];
+        typeName = 'Phrygian';
+        break;
+      case ScaleType.lydian:
+        intervals = [0, 2, 2, 2, 1, 2, 2, 1];
+        typeName = 'Lydian';
+        break;
+      case ScaleType.mixolydian:
+        intervals = [0, 2, 2, 1, 2, 2, 1, 2];
+        typeName = 'Mixolydian';
+        break;
+      case ScaleType.locrian:
+        intervals = [0, 1, 2, 2, 1, 2, 2, 2];
+        typeName = 'Locrian';
+        break;
+      default:
+        // 默认使用大调音阶
+        intervals = [0, 2, 2, 1, 2, 2, 2, 1];
+        typeName = 'Major';
+        break;
     }
-    
+
     // 计算音域
     final minPitch = rootNote.pitch - 12 * ((octaveCount - 1) ~/ 2);
     final maxPitch = rootNote.pitch + 12 * ((octaveCount - 1) ~/ 2) + 12;
-    
-    final notes = _generateNotesInRange(rootNote, intervals, minPitch, maxPitch);
-    
+
+    final notes = _generateNotesInRange(
+      rootNote,
+      intervals,
+      minPitch,
+      maxPitch,
+    );
+
     return Scale._internal(
       name: '${rootNote.name} $typeName ($octaveCount octaves)',
       type: type,

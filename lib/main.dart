@@ -29,11 +29,37 @@ class GuitarFretboardPage extends StatefulWidget {
 }
 
 class _GuitarFretboardPageState extends State<GuitarFretboardPage> {
-  // 可选的调列表
-  final List<String> _keys = ['C', 'G', 'D'];
+  // 可选的调列表（包含所有十二个调式，按五度圈顺序排列）
+  final List<String> _keys = [
+    'C',
+    'G',
+    'D',
+    'A',
+    'E',
+    'B',
+    'F#',
+    'Db',
+    'Ab',
+    'Eb',
+    'Bb',
+    'F',
+  ];
 
   // 可选的音阶类型列表
-  final List<String> _scaleTypes = ['大调', '大调五声音阶', '小调五声音阶'];
+  final List<String> _scaleTypes = [
+    '大调',
+    '大调五声音阶',
+    '小调五声音阶',
+    '自然小调',
+    '和声小调',
+    '旋律小调',
+    '蓝调',
+    '多利亚调式',
+    '弗里几亚调式',
+    '利底亚调式',
+    '混合利底亚调式',
+    '洛克里亚调式',
+  ];
 
   // 当前选中的调
   String _selectedKey = 'C';
@@ -63,9 +89,37 @@ class _GuitarFretboardPageState extends State<GuitarFretboardPage> {
         _currentScale = Scale.pentatonicMajor(rootNote);
         break;
       case '小调五声音阶':
-        // 小调五声音阶的根音需要调整，通常小调五声音阶使用关系小调
-        // 这里简化处理，直接使用选中的调作为根音
         _currentScale = Scale.pentatonicMinor(rootNote);
+        break;
+      case '自然小调':
+        _currentScale = Scale.naturalMinor(rootNote);
+        break;
+      case '和声小调':
+        _currentScale = Scale.harmonicMinor(rootNote);
+        break;
+      case '旋律小调':
+        _currentScale = Scale.melodicMinor(rootNote);
+        break;
+      case '蓝调':
+        _currentScale = Scale.blues(rootNote);
+        break;
+      case '多利亚调式':
+        _currentScale = Scale.dorian(rootNote);
+        break;
+      case '弗里几亚调式':
+        _currentScale = Scale.phrygian(rootNote);
+        break;
+      case '利底亚调式':
+        _currentScale = Scale.lydian(rootNote);
+        break;
+      case '混合利底亚调式':
+        _currentScale = Scale.mixolydian(rootNote);
+        break;
+      case '洛克里亚调式':
+        _currentScale = Scale.locrian(rootNote);
+        break;
+      default:
+        _currentScale = Scale.major(rootNote);
         break;
     }
   }
