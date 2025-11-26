@@ -155,11 +155,12 @@ class GuitarFretboardPainter extends CustomPainter {
     // 计算弦之间的间距
     final stringSpacing = size.height / (fretboard.stringCount - 1);
 
-    // 正确的绘制顺序：6弦在最下面，1弦在最上面
+    // 反转绘制顺序，使得6弦在最下面，1弦在最上面
     // 同时使用数据模型中定义的琴弦粗细
     for (int i = 0; i < fretboard.stringCount; i++) {
-      // i=0对应6弦，i=5对应1弦
-      final guitarString = fretboard.strings[i];
+      // 计算实际的弦索引：i=0对应6弦，i=5对应1弦
+      final stringIndex = fretboard.stringCount - 1 - i;
+      final guitarString = fretboard.strings[stringIndex];
 
       // 计算弦在画布上的位置：6弦在最下面，1弦在最上面
       final y = i * stringSpacing;
@@ -203,9 +204,12 @@ class GuitarFretboardPainter extends CustomPainter {
 
       // 计算x坐标（品的位置）
       if (position.fretNumber == fretboard.fretCount) {
-        // 最后一品，位于指板最右侧
+        // 最后一品，位于第11品和指板末端之间的中间位置
         final prevFret = fretboard.frets[position.fretNumber - 1];
-        x = size.width - 20.0; // 稍微向左偏移
+        // 计算第11品到指板末端的距离
+        final fretWidth = 1.0 - prevFret.position;
+        // 计算居中位置
+        x = size.width * (prevFret.position + fretWidth / 2);
       } else {
         // 其他品，位于两个品丝之间的中间位置
         final prevFret = fretboard.frets[position.fretNumber - 1];

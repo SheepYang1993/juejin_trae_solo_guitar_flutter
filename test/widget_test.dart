@@ -23,29 +23,50 @@ void main() {
     // Verify that the guitar fretboard title is displayed.
     expect(find.text('6弦12品吉他指板'), findsOneWidget);
 
-    // Verify that the scale selection dropdown is displayed.
-    expect(find.byType(DropdownButton<int>), findsOneWidget);
+    // Verify that the key selection dropdown is displayed.
+    expect(find.byType(DropdownButton<String>), findsNWidgets(2));
 
     // Verify that the guitar fretboard widget is displayed.
     expect(find.byType(GuitarFretboardWidget), findsOneWidget);
   });
 
-  testWidgets('Scale selection test', (WidgetTester tester) async {
+  testWidgets('Key selection test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
 
-    // Verify initial scale is displayed
+    // Verify initial key and scale type are displayed
     expect(find.text('当前显示: C Major'), findsOneWidget);
 
-    // Tap the dropdown button to open the menu
-    await tester.tap(find.byType(DropdownButton<int>));
+    // Tap the key dropdown button to open the menu
+    final dropdownButtons = find.byType(DropdownButton<String>);
+    await tester.tap(dropdownButtons.first);
     await tester.pumpAndSettle();
 
-    // Select the second scale (G Major)
-    await tester.tap(find.text('G Major').last);
+    // Select the second key (G)
+    await tester.tap(find.text('G').last);
     await tester.pumpAndSettle();
 
-    // Verify that the selected scale has changed
+    // Verify that the selected key has changed
     expect(find.text('当前显示: G Major'), findsOneWidget);
+  });
+
+  testWidgets('Scale type selection test', (WidgetTester tester) async {
+    // Build our app and trigger a frame.
+    await tester.pumpWidget(const MyApp());
+
+    // Verify initial scale type is displayed
+    expect(find.text('当前显示: C Major'), findsOneWidget);
+
+    // Tap the scale type dropdown button to open the menu
+    final dropdownButtons = find.byType(DropdownButton<String>);
+    await tester.tap(dropdownButtons.last);
+    await tester.pumpAndSettle();
+
+    // Select the second scale type (大调五声音阶)
+    await tester.tap(find.text('大调五声音阶').last);
+    await tester.pumpAndSettle();
+
+    // Verify that the selected scale type has changed
+    expect(find.text('当前显示: C Pentatonic Major'), findsOneWidget);
   });
 }
