@@ -233,7 +233,7 @@ class GuitarFretboardPainter extends CustomPainter {
       y = (position.stringNumber - 1) * stringSpacing;
 
       // 空弦音符绘制在指板最左侧，距离指板左侧有一定间距
-      x = -30.0; // 位于指板左侧外部
+      x = 20.0; // 位于指板左侧内部
 
       // 绘制空弦音符标记
       _drawOpenStringNoteMarker(canvas, x, y, position.note);
@@ -247,7 +247,7 @@ class GuitarFretboardPainter extends CustomPainter {
 
     // 绘制音符圆圈（比指板上的音符稍小）
     final circlePaint = Paint()
-      ..color = noteColor.withOpacity(0.8)
+      ..color = noteColor.withValues(alpha: 0.8)
       ..style = PaintingStyle.fill;
 
     const circleRadius = 10.0;
@@ -343,34 +343,52 @@ class GuitarFretboardPainter extends CustomPainter {
 
 /// 吉他指板组件
 class GuitarFretboardWidget extends StatelessWidget {
-  final double width;
-  final double height;
   final Scale? scale; // 可选的音阶参数
+  final int stringCount; // 弦数
+  final int fretCount; // 品数
 
-  // 优化长宽比例，默认4:1的比例（符合实际吉他指板比例）
+  // 默认6弦12品
   const GuitarFretboardWidget({
     super.key,
-    this.width = 400,
-    this.height = 100,
     this.scale,
+    this.stringCount = 6,
+    this.fretCount = 12,
   });
 
   @override
   Widget build(BuildContext context) {
-    // 创建指板数据模型
-    final fretboard = GuitarFretboard(
-      stringCount: 6,
-      fretCount: 12,
-      width: width,
-      height: height,
-    );
+    // 使用LayoutBuilder获取父组件的约束
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        // 计算合适的宽度：使用父组件宽度的100%，但不超过800像素
+        final double calculatedWidth = constraints.maxWidth;
+        final double width = calculatedWidth > 800 ? 800 : calculatedWidth;
 
-    return SizedBox(
-      width: width,
-      height: height,
-      child: CustomPaint(
-        painter: GuitarFretboardPainter(fretboard, scale: scale),
-      ),
+        // 计算合适的高度：根据宽高比4:1计算，同时考虑弦数
+        // 每个弦需要一定的高度，确保音符标记能够清晰显示
+        final double ratio = 4.0; // 宽高比
+        final double heightBasedOnRatio = width / ratio;
+        final double heightBasedOnStrings = stringCount * 25.0; // 每个弦25像素高度
+        final double height = heightBasedOnRatio > heightBasedOnStrings
+            ? heightBasedOnRatio
+            : heightBasedOnStrings;
+
+        // 创建指板数据模型
+        final fretboard = GuitarFretboard(
+          stringCount: stringCount,
+          fretCount: fretCount,
+          width: width,
+          height: height,
+        );
+
+        return SizedBox(
+          width: width,
+          height: height,
+          child: CustomPaint(
+            painter: GuitarFretboardPainter(fretboard, scale: scale),
+          ),
+        );
+      },
     );
   }
 }

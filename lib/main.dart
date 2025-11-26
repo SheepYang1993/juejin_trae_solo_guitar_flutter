@@ -373,11 +373,7 @@ class _GuitarFretboardPageState extends State<GuitarFretboardPage> {
                       SizedBox(
                         width: double.infinity,
                         child: Center(
-                          child: GuitarFretboardWidget(
-                            width: 600,
-                            height: 150,
-                            scale: _currentScale,
-                          ),
+                          child: GuitarFretboardWidget(scale: _currentScale),
                         ),
                       ),
                     ],
