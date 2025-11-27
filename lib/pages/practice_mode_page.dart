@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../components/guitar_fretboard_painter.dart';
 import '../models/scales.dart';
+import '../utils/midi_utils.dart';
 
 // 练习状态枚举
 enum PracticeState {
@@ -54,10 +55,10 @@ class _PracticeModePageState extends State<PracticeModePage> {
   int _selectedFindNoteDuration = 5;
   // 用户选择的显示答案阶段时长
   int _selectedShowAnswerDuration = 10;
-  // 可选的时长列表（5秒到60秒，步长5秒）
+  // 可选的时长列表（1秒到60秒，步长1秒）
   final List<int> _durationOptions = List.generate(
-    12,
-    (index) => (index + 1) * 5,
+    60,
+    (index) => (index + 1) * 1,
   );
   // 用户选择的练习顺序
   PracticeOrder _selectedPracticeOrder = PracticeOrder.randomOrder;
@@ -67,11 +68,27 @@ class _PracticeModePageState extends State<PracticeModePage> {
   // 倒计时更新定时器
   Timer? _countdownTimer;
 
+  // MIDI工具类
+  final MidiUtils _midiUtils = MidiUtils();
+
   // 初始化练习
   @override
   void initState() {
     super.initState();
+    _initializeMidi();
     _startNewRound();
+  }
+
+  // 初始化MIDI
+  Future<void> _initializeMidi() async {
+    await _midiUtils.initialize();
+  }
+
+  // 播放当前音符
+  void _playCurrentNote() {
+    if (_currentNote != null) {
+      _midiUtils.playNote(_currentNote!.pitch);
+    }
   }
 
   // 开始新的一遍练习
@@ -107,6 +124,9 @@ class _PracticeModePageState extends State<PracticeModePage> {
       _countdown = _selectedFindNoteDuration;
     });
 
+    // 播放当前音符
+    _playCurrentNote();
+
     // 启动倒计时更新定时器，每秒更新一次
     _startCountdown();
 
@@ -118,6 +138,9 @@ class _PracticeModePageState extends State<PracticeModePage> {
         // 重置倒计时为用户选择的显示答案阶段时长
         _countdown = _selectedShowAnswerDuration;
       });
+
+      // 播放当前音符（显示答案时也播放）
+      _playCurrentNote();
 
       // 启动倒计时更新定时器，每秒更新一次
       _startCountdown();
